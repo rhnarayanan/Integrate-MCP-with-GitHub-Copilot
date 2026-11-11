@@ -1,8 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
   const activitiesList = document.getElementById("activities-list");
-  const activitySelect = document.getElementById("activity");
-  const signupForm = document.getElementById("signup-form");
   const messageDiv = document.getElementById("message");
+  const teacherInstructions = document.getElementById("teacher-instructions");
   const searchInput = document.getElementById("search");
   const categoryFilter = document.getElementById("category-filter");
   const sortBy = document.getElementById("sort-by");
@@ -11,6 +10,29 @@ document.addEventListener("DOMContentLoaded", () => {
   const loginForm = document.getElementById("login-form");
   const logoutBtn = document.getElementById("logout-btn");
   const teacherStatus = document.getElementById("teacher-status");
+
+  async function fetchTeacherStatus() {
+    try {
+      const response = await fetch("/teachers/me");
+      if (!response.ok) {
+        teacherStatus.textContent = "Student View";
+        teacherInstructions.textContent = "Log in as a teacher to register or unregister students.";
+        return false;
+      }
+      const result = await response.json();
+      if (result.authenticated) {
+        teacherStatus.textContent = `Teacher: ${result.username}`;
+        teacherInstructions.textContent = "Teacher mode enabled. Use the register buttons on each activity card.";
+        return true;
+      }
+      teacherStatus.textContent = "Student View";
+      teacherInstructions.textContent = "Log in as a teacher to register or unregister students.";
+      return false;
+    } catch (error) {
+      console.error("Error checking teacher status:", error);
+      return false;
+    }
+  }
 
   async function fetchActivities() {
     try {
@@ -29,7 +51,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const activities = await response.json();
 
       activitiesList.innerHTML = "";
-      activitySelect.innerHTML = '<option value="">-- Select an activity --</option>';
+      const isTeacher = teacherStatus.textContent.startsWith("Teacher:");
 
       Object.entries(activities).forEach(([name, details]) => {
         const activityCard = document.createElement("div");
@@ -44,14 +66,15 @@ document.addEventListener("DOMContentLoaded", () => {
               <h5>Participants:</h5>
               <ul class="participants-list">
                 ${details.participants
-                  .map(
-                    (email) =>
-                      `<li><span class="participant-email">${email}</span><button class="delete-btn" data-activity="${name}" data-email="${email}">❌</button></li>`
-                  )
+                  .map((email) => `<li><span class="participant-email">${email}</span>${isTeacher ? `<button class="delete-btn" data-activity="${name}" data-email="${email}">❌</button>` : ""}</li>`)
                   .join("")}
               </ul>
             </div>`
             : `<p><em>No participants yet</em></p>`;
+
+        const registerButton = isTeacher
+          ? `<button class="register-btn" data-activity="${name}" type="button">Register Student</button>`
+          : `<button class="register-btn" data-activity="${name}" type="button" disabled>Teacher Login Required</button>`;
 
         activityCard.innerHTML = `
           <h4>${name}</h4>
@@ -62,23 +85,59 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="participants-container">
             ${participantsHTML}
           </div>
+          <div class="activity-actions">
+            ${registerButton}
+          </div>
         `;
 
         activitiesList.appendChild(activityCard);
-
-        const option = document.createElement("option");
-        option.value = name;
-        option.textContent = name;
-        activitySelect.appendChild(option);
       });
 
       document.querySelectorAll(".delete-btn").forEach((button) => {
         button.addEventListener("click", handleUnregister);
       });
+
+      document.querySelectorAll(".register-btn").forEach((button) => {
+        if (!button.disabled) {
+          button.addEventListener("click", handleRegisterStudent);
+        }
+      });
     } catch (error) {
       activitiesList.innerHTML =
         "<p>Failed to load activities. Please try again later.</p>";
       console.error("Error fetching activities:", error);
+    }
+  }
+
+  async function handleRegisterStudent(event) {
+    const button = event.currentTarget;
+    const activity = button.getAttribute("data-activity");
+    const email = window.prompt(`Enter the student email to register for ${activity}:`);
+    if (!email) return;
+
+    try {
+      const response = await fetch(`/activities/${encodeURIComponent(activity)}/signup?email=${encodeURIComponent(email)}`, {
+        method: "POST",
+      });
+      const result = await response.json();
+
+      if (response.ok) {
+        messageDiv.textContent = result.message;
+        messageDiv.className = "success";
+        await fetchActivities();
+      } else {
+        messageDiv.textContent = result.detail || "An error occurred";
+        messageDiv.className = "error";
+      }
+      messageDiv.classList.remove("hidden");
+      setTimeout(() => {
+        messageDiv.classList.add("hidden");
+      }, 5000);
+    } catch (error) {
+      messageDiv.textContent = "Failed to register the student.";
+      messageDiv.className = "error";
+      messageDiv.classList.remove("hidden");
+      console.error("Error registering student:", error);
     }
   }
 
@@ -116,42 +175,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  signupForm.addEventListener("submit", async (event) => {
-    event.preventDefault();
-
-    const email = document.getElementById("email").value;
-    const activity = document.getElementById("activity").value;
-
-    try {
-      const response = await fetch(
-        `/activities/${encodeURIComponent(activity)}/signup?email=${encodeURIComponent(email)}`,
-        { method: "POST" }
-      );
-
-      const result = await response.json();
-
-      if (response.ok) {
-        messageDiv.textContent = result.message;
-        messageDiv.className = "success";
-        signupForm.reset();
-        await fetchActivities();
-      } else {
-        messageDiv.textContent = result.detail || "An error occurred";
-        messageDiv.className = "error";
-      }
-
-      messageDiv.classList.remove("hidden");
-      setTimeout(() => {
-        messageDiv.classList.add("hidden");
-      }, 5000);
-    } catch (error) {
-      messageDiv.textContent = "Failed to sign up. Please try again.";
-      messageDiv.className = "error";
-      messageDiv.classList.remove("hidden");
-      console.error("Error signing up:", error);
-    }
-  });
-
   searchInput.addEventListener("input", fetchActivities);
   categoryFilter.addEventListener("change", fetchActivities);
   sortBy.addEventListener("change", fetchActivities);
@@ -175,6 +198,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (response.ok) {
         teacherStatus.textContent = `Teacher: ${result.username}`;
+        teacherInstructions.textContent = "Teacher mode enabled. Use the register buttons on each activity card.";
         loginPanel.classList.add("hidden");
         loginForm.reset();
         messageDiv.textContent = result.message;
@@ -188,6 +212,7 @@ document.addEventListener("DOMContentLoaded", () => {
       setTimeout(() => {
         messageDiv.classList.add("hidden");
       }, 5000);
+      await fetchActivities();
     } catch (error) {
       messageDiv.textContent = "Teacher login failed.";
       messageDiv.className = "error";
@@ -205,12 +230,15 @@ document.addEventListener("DOMContentLoaded", () => {
       });
       if (response.ok) {
         teacherStatus.textContent = "Student View";
+        teacherInstructions.textContent = "Log in as a teacher to register or unregister students.";
         loginPanel.classList.add("hidden");
       }
+      await fetchActivities();
     } catch (error) {
       console.error("Error logging out:", error);
     }
   });
 
+  fetchTeacherStatus();
   fetchActivities();
 });

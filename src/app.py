@@ -78,6 +78,11 @@ def filter_activities(raw_activities, *, category=None, sort="name", search=""):
     return {name: details for name, details in items}
 
 
+def require_teacher_auth():
+    if not app.state.teacher_sessions:
+        raise HTTPException(status_code=403, detail="Teacher authentication required to register or unregister students")
+
+
 @app.get("/")
 def root():
     return RedirectResponse(url="/static/index.html")
@@ -118,6 +123,8 @@ def teacher_status():
 @app.post("/activities/{activity_name}/signup")
 def signup_for_activity(activity_name: str, email: str):
     """Sign up a student for an activity"""
+    require_teacher_auth()
+
     if activity_name not in app.state.activities:
         raise HTTPException(status_code=404, detail="Activity not found")
 
@@ -136,6 +143,8 @@ def signup_for_activity(activity_name: str, email: str):
 @app.delete("/activities/{activity_name}/unregister")
 def unregister_from_activity(activity_name: str, email: str):
     """Unregister a student from an activity"""
+    require_teacher_auth()
+
     if activity_name not in app.state.activities:
         raise HTTPException(status_code=404, detail="Activity not found")
 

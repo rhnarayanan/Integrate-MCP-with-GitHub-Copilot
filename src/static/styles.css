@@ -228,6 +228,19 @@ button:hover {
   background-color: #3949ab;
 }
 
+.activity-actions {
+  margin-top: 18px;
+}
+
+.register-btn {
+  background-color: #2e7d32;
+}
+
+.register-btn:disabled {
+  background-color: #b0bec5;
+  cursor: not-allowed;
+}
+
 .message {
   margin-top: 20px;
   padding: 10px;
