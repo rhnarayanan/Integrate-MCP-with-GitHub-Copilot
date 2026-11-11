@@ -8,13 +8,52 @@
   </head>
   <body>
     <header>
+      <div class="header-top">
+        <div></div>
+        <button id="login-toggle" class="login-toggle" type="button">Teacher Login</button>
+      </div>
       <h1>Mergington High School</h1>
       <h2>Extracurricular Activities</h2>
+      <div id="teacher-status" class="teacher-status">Student View</div>
     </header>
+
+    <div id="login-panel" class="login-panel hidden">
+      <form id="login-form" class="login-form">
+        <div class="form-group">
+          <label for="teacher-username">Username:</label>
+          <input id="teacher-username" name="username" type="text" required placeholder="teacher" />
+        </div>
+        <div class="form-group">
+          <label for="teacher-password">Password:</label>
+          <input id="teacher-password" name="password" type="password" required placeholder="Enter password" />
+        </div>
+        <div class="login-actions">
+          <button type="submit">Log In</button>
+          <button type="button" id="logout-btn" class="secondary">Log Out</button>
+        </div>
+      </form>
+    </div>
 
     <main>
       <section id="activities-container">
         <h3>Available Activities</h3>
+        <div class="toolbar">
+          <input id="search" type="search" placeholder="Search activities" />
+          <select id="category-filter">
+            <option value="all">All categories</option>
+            <option value="Academic">Academic</option>
+            <option value="Athletics">Athletics</option>
+            <option value="Arts">Arts</option>
+            <option value="STEM">STEM</option>
+            <option value="Technology">Technology</option>
+          </select>
+          <select id="sort-by">
+            <option value="name">Sort by name</option>
+            <option value="category">Sort by category</option>
+            <option value="schedule">Sort by schedule</option>
+            <option value="availability">Sort by availability</option>
+          </select>
+        </div>
         <div id="activities-list">
           <!-- Activities will be loaded here -->
           <p>Loading activities...</p>

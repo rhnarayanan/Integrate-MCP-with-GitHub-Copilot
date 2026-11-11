@@ -17,11 +17,71 @@ body {
 
 header {
   text-align: center;
-  padding: 20px 0;
+  padding: 20px 20px 15px;
   margin-bottom: 30px;
   background-color: #1a237e;
   color: white;
   border-radius: 5px;
+}
+
+.header-top {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 10px;
+}
+
+.teacher-status {
+  margin-top: 8px;
+  font-size: 0.9rem;
+  color: #dfe7ff;
+}
+
+.login-toggle,
+.secondary {
+  background-color: #fff;
+  color: #1a237e;
+  border: none;
+  border-radius: 5px;
+  padding: 8px 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.login-panel {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin: 0 auto 24px;
+  max-width: 500px;
+  padding: 20px;
+}
+
+.login-form {
+  display: grid;
+  gap: 12px;
+}
+
+.login-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.toolbar {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.toolbar input,
+.toolbar select,
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
 }
 
 header h1 {
@@ -38,6 +98,10 @@ main {
 @media (min-width: 768px) {
   main {
     grid-template-columns: 2fr 1fr;
+  }
+
+  .toolbar {
+    grid-template-columns: 1.3fr 1fr 1fr;
   }
 }
 
